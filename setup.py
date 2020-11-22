@@ -6,7 +6,8 @@ setup(
     package_dir={'': 'src'},
     packages=find_packages('src'),
     install_requires=[
-        'docopt==0.6.2'
+        'docopt==0.6.2',
+        'adafruit-circuitpython-charlcd==3.3.4'
     ],
     entry_points={
         'console_scripts': ['cappi=capstonepi.main:main']
