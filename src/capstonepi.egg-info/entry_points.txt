@@ -1,0 +1,3 @@
+[console_scripts]
+cappi = capstonepi.main:main
+

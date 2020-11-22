@@ -1,0 +1,8 @@
+src/capstonepi/__init__.py
+src/capstonepi/main.py
+src/capstonepi.egg-info/PKG-INFO
+src/capstonepi.egg-info/SOURCES.txt
+src/capstonepi.egg-info/dependency_links.txt
+src/capstonepi.egg-info/entry_points.txt
+src/capstonepi.egg-info/requires.txt
+src/capstonepi.egg-info/top_level.txt
