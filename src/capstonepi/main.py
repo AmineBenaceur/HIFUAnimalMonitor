@@ -6,9 +6,9 @@ Options:
 --foo=<bar>  my flag [default: bardefault]
 """
 
-from docopt import docopt
+from docopt import *
 
-def main():
+idef main():
     args = docopt(__doc__)
     print(args)
 
