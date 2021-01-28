@@ -50,7 +50,7 @@ class Hardware_Adafruit:
        self.lcd.color = [0,100,00]
        # Print intro message
        self.lcd.message = "AnimalMonitor\n500-NS-1-NeuroFUS"
-       time.sleep(1)
+       time.sleep(2.5)
 
  
 
@@ -97,18 +97,23 @@ class Hardware_Adafruit:
           if self.lcd.right_button:
              self.set_temp = set_temp_initial
              break
-
+        
           if self.lcd.left_button:
              break
-
+       if self.set_temp > self.current_temp:
+          self.lcd.color = [100,0,0]
+       if self.set_temp < self.current_temp:
+           #self.lcd.color = [0,0,100]
+           pass
    def demo_buttons(self):
+       self.update()
        temp_initial = self.current_temp
        set_temp_initial = self.set_temp
        while(True):
+    
            if self.lcd.down_button:
                self.enter_temp_setting_mode()
-               self.clear
-               self.lcd.message = "DOWN"
+
            if self.lcd.left_button:
               # self.clear
               # self.lcd.message= "LEFT"
@@ -124,26 +129,35 @@ class Hardware_Adafruit:
   
            if self.lcd.select_button:
                self.clear()
-               self.lcd.color = [50,0,50]
-               self.lcd.message="SELECT"
-   
+               #self.lcd.color = [50,0,50]
+               self.lcd.message="Status:\n  Disconnected"
+               while(True):
+                   if self.lcd.select_button:
+                      # self.lcd.color=[0,0,100]
+                      # self.lcd.backlight = True
+                       break
+               # self.lcd.clear()
+               #self.lcd.color = [0,0,100] #green
+               #time.sleep(1)
+               self.update()
+               #self.lcd.color = [10,0,100]
    def update(self):
       self.clear();
       self.monitor_string = "T= {:.1f}   HR= {:.0f} \nSet Temp: {:.1f} ".format(self.current_temp, self.heart_rate, self.set_temp) 
       self.printToLCD(self.monitor_string)
 
-
+    
 def main():
     af = Hardware_Adafruit()
     af.playIntro()
     time.sleep(1)
     af.clear()
-    af.inc_temp()
-    af.update()
-    af.inc_temp()
-    time.sleep(1)
-    af.update()
-    time.sleep(1)
+    #af.inc_temp()
+    #af.update()
+    #af.inc_temp()
+    #time.sleep(1)
+    #af.update()
+    #time.sleep(1)
     af.demo_buttons()
 
     #key_read = prev_key = af.i2c.scan()
