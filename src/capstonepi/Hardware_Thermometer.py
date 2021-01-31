@@ -71,12 +71,24 @@ class ProbeThermometer():
     
         
         '''
+    def print_temp():
+        while True:
+            read=self.get_reading()
+            print("TEMP= {} \t AMBIENT={} \t DELTA={}".format(read['probe'], read['ambient'], read['delta']))
+            time.sleep(1)
+
+    def start_temp_thread(self):
+        thread = Thread(target = self.print_temp )
+        thread.start()
 
 
 probe = ProbeThermometer()
 while True:
     read = probe.get_reading()
-    print("T= {} A= {} D={} ".format(read['probe'], read['ambient'], read['delta']))
+
+    print("TEMP= {}\tAMBIENT={}\tDELTA={}".format(read['probe'], read['ambient'], read['delta']))
+    
+
     time.sleep(1)
 
 
