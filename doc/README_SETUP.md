@@ -97,3 +97,51 @@ git clone https://github.com/AmineBenaceur/HIFUAnimalMonitor.git
 ```
 
 6. You will be asked for your username and password again, the pull should finish quickly after.
+
+
+## installing CircuitPython & Libraries
+
+1. first run the following update commands on the Pi:
+
+```
+sudo apt-get update
+```
+```
+sudo apt-get upgrade
+```
+```
+sudo pip3 install --upgrade setuptools
+```
+
+2. run the following commands one after the other to install the Blinka library, after running all the commands in succession it will first ask you to upgrade, say yes. Then it may take a couple minutes to finish. After it finishes it will ask you to reboot, choose yes again.
+
+```
+cd ~
+```
+```
+sudo pip3 install --upgrade adafruit-python-shell
+```
+```
+wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/master/raspi-blinka.py
+```
+```
+sudo python3 raspi-blinka.py
+```
+
+#### enabling the second SPI port
+1. run the folllowing command
+```
+sudo python3 raspi-blinka.py
+```
+2. paste the following to the bottom of this file
+```
+dtoverlay=spi1-3cs
+```
+then press [control + X], Y , then press ENTER
+
+
+#### install adafruit libraries
+1. run the following commands:
+```
+sudo pip3 install adafruit-circuitpython-charlcd
+```
