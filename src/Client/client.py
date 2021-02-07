@@ -12,21 +12,29 @@ import time
 
 
 
-class Client(LineReceiver):
+class EchoClient(LineReceiver):
     end = b'ending'
+    responses = []
 
     def connectionMade(self):
         self.ping()
-        self.sendLine(b"Client connected")
+        self.setTemp(30)
 
     def ping(self):
         start = time.time()
-        self.transport.write(b'')
+        self.transport.write(b'ping')
         elapsed = time.time() - start
         print('ping: ', elapsed)
         
+    def setTemp(self, temp):
+        temp = bytes(temp)
+        self.transport.write(b'set temp' + temp)
+
     def lineReceived(self, line):
         print("receive:", line)
+        self.responses.append(line)
+        print(responses[0])
+        responses.pop(0)
         if line == self.end:
             self.transport.loseConnection()
 
