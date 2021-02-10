@@ -1,8 +1,9 @@
-"""Simple test for I2C RGB character LCD shield kit"""
-import time
 import board
+import time
 import busio
 import adafruit_character_lcd.character_lcd_rgb_i2c as character_lcd
+from Hardware_Thermometer import ProbeThermometer
+
 
 '''
 2020-12-05 AB: A Hardware interface file witht the adafruit 16x2 RBG Keypad, using i2c communication
@@ -15,15 +16,17 @@ to run file for testing:
 
 
 class Hardware_Adafruit:
-   def __init__(self):
+   def __init__(self, c):
    
        self.columns=16
        self.rows = 2
        
+       self.controller = c
        self.current_temp = 37.0;
        self.set_temp = 37.0;
        self.heart_rate = 44;
-
+        
+        
        self.monitor_string = "T= {:.1f}   HR= {:.0f} \nSet Temp: {:.1f} ".format(self.current_temp, self.heart_rate, self.set_temp) 
     
         
@@ -37,8 +40,7 @@ class Hardware_Adafruit:
 
        # Set LCD color to green
        self.lcd.color = [0, 0, 100]
-       
-
+    
    def clear(self):
        '''
        2020-12-05 AB: clear the screen
@@ -105,7 +107,10 @@ class Hardware_Adafruit:
        if self.set_temp < self.current_temp:
            #self.lcd.color = [0,0,100]
            pass
+
    def demo_buttons(self):
+       self.playIntro()
+       self.clear()
        self.update()
        temp_initial = self.current_temp
        set_temp_initial = self.set_temp

@@ -80,7 +80,7 @@ class ProbeThermometer():
     def start_temp_thread(self):
         thread = Thread(target = self.print_temp )
         thread.start()
-
+'''
 
 probe = ProbeThermometer()
 while True:
@@ -90,7 +90,7 @@ while True:
     
 
     time.sleep(1)
-
+'''
 
 
 # frequency must be set for the MCP9600 to function.
