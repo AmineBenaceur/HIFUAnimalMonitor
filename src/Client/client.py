@@ -12,7 +12,7 @@ import time
 
 
 
-class Client(LineReceiver):
+class EchoClient(LineReceiver):
     end = b'ending'
 
     def connectionMade(self):
