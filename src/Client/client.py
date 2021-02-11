@@ -3,6 +3,7 @@
 # See LICENSE for details.
 
 from __future__ import print_function
+from twisted.internet import reactor, protocol
 
 from twisted.internet import task
 from twisted.internet.defer import Deferred
@@ -12,13 +13,9 @@ import time
 
 
 
-class EchoClient(LineReceiver):
+class EchoClient(protocol.Protocol):
     end = b'ending'
     responses = []
-
-    def connectionMade(self):
-        self.ping()
-        self.setTemp(30)
 
     def ping(self):
         start = time.time()
@@ -28,15 +25,17 @@ class EchoClient(LineReceiver):
         
     def setTemp(self, temp):
         temp = bytes(temp)
-        self.transport.write(b'set temp' + temp)
+        self.transport.write(b'Set temporary array ' + temp)
+        
+    def connectionMade(self):
+        # self.ping()
+        self.setTemp(30)
 
-    def lineReceived(self, line):
-        print("receive:", line)
-        self.responses.append(line)
-        print(responses[0])
-        responses.pop(0)
-        if line == self.end:
-            self.transport.loseConnection()
+    def dataReceived(self, data):
+        print("Server received:")
+        print(data)
+        print('"setTemp" is completed')
+        self.transport.loseConnection()
 
 
 
@@ -53,17 +52,18 @@ class EchoClientFactory(ClientFactory):
 
 
     def clientConnectionLost(self, connector, reason):
-        print('connection lost:', reason.getErrorMessage())
-        self.done.callback(None)
+        print("Connection lost - goodbye!")
+        reactor.stop()
 
 
 
 def main(reactor):
     factory = EchoClientFactory()
     reactor.connectTCP('localhost', 8000, factory)
-    return factory.done
+    reactor.run()
 
 
 
 if __name__ == '__main__':
-    task.react(main)
+    # task.react(main)
+    main()
