@@ -13,19 +13,21 @@ class Echo(Protocol):
     commands = []
 
     def dataReceived(self, data):
-        self.transport.write(b'mock heartbeat data')
-        self.commands.append(data)
-        print(self.commands[0], end='\n')
-        data = ''
+        self.transport.write(data)
+        
+        # self.transport.write(b'mock heartbeat data')
+        # self.commands.append(data)
+        # print(self.commands[0], end='\n')
+        # data = ''
       
-        if self.commands[0] == b'set temp':
+        # if self.commands[0] == b'set temp':
             #set temp here
-            self.commands.pop(0)
-            self.transport.write(b'set temp complete')
+        #     self.commands.pop(0)
+        #     self.transport.write(b'set temp complete')
       
-        if self.commands[0] == b'ping':
-            self.commands.pop(0)
-            self.transport.write(b'ping')
+        # if self.commands[0] == b'ping':
+        #     self.commands.pop(0)
+        #     self.transport.write(b'ping')
             
 def main():
     f = Factory()
