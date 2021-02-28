@@ -38,6 +38,7 @@ class MonitorClient:
         self.reactor = reactor
 
         #TODO: INSTANTIATE QUEUE
+        self.queue = []
     '''
     2021-02-28 AB: Run the Client in sequential mode
     '''
@@ -102,6 +103,15 @@ class MonitorClient:
 
 
             '''
+            data = {}
+            data['time'] = time.time()
+            data['probe'] = self.mcb.probe
+            data['bed'] = self.mcb.bed
+            data['hb'] = self.mcb.hb
+            self.addToQueue(data)
+            self.getQueue()
+
+
 
         else:
             print("Something went wrong in remote getData()")
@@ -109,9 +119,15 @@ class MonitorClient:
 
 
 ## TODO ADD_TOQUEUE
+    def addToQueue(self, dictionary):
+        self.queue.append(dictionary)
 
 
 ## FUNCTION: GET_QUEUE
+    def getQueue(self):
+        dataTemp = self.queue.pop(0)
+        print(" Queue server data PROBE={} , BED={}, HB={}".format(dataTemp['probe'], dataTemp['bed'], dataTemp['hb']))
+        return dataTemp
 
 
 class MonitorClientBroker:
