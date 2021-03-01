@@ -18,6 +18,7 @@ class MonitorServer(pb.Root):
 
         self.t= 37
         self.hb=50
+        self.set_t = -1
     def remote_connect(self):
         print("Connection Request Recieved")
         self.status['connect'] = 'success'
@@ -53,9 +54,20 @@ class MonitorServer(pb.Root):
         self.status['data_bed'] = random.randint(40,50)
 
         return self.status
+    def remote_setTemp(self, stat,nt):
+        if nt != self.set_t:
+            self.status['set_temp'] = 'success'
+            self.set_t = nt
+            print("new temp setting request Tnew= {}".format(self.set_t))
+        else:
+            print("Failed to recieved new set temp")
+            self.status['set_temp'] = 'fail'
 
+        return self.status
 
 sd = SensorData()
+
+
 root_obj = MonitorServer(sd)
 reactor.listenTCP(8800, pb.PBServerFactory(root_obj))
 reactor.run()

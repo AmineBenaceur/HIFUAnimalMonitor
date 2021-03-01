@@ -5,6 +5,7 @@ import sys, os
 import subprocess
 import threading
 import _thread
+import random
 '''
 #2020-02-28 AB: Client Class running within MORPHEUS
 '''
@@ -25,6 +26,9 @@ def main():
             print("____________________ Test get_data  _________________")
             time.sleep(2)
             mc.get_data()
+            print("____________________ Test set_temp  _________________")
+            time.sleep(2)
+            mc.set_new_temp(random.randint(30,40))
     except Exception as e:
         print(e)
 
@@ -116,7 +120,12 @@ class MonitorClient:
         else:
             print("Something went wrong in remote getData()")
 
-
+    def set_new_temp(self, t):
+        self.mcb.temp_set = False
+        self.mcb.set_temp(t)
+        while(self.mcb.temp_set != True):
+            time.sleep(0.5) #do nothing
+        print("new temp={} set complete".format(t))
 
 ## TODO ADD_TOQUEUE
     def addToQueue(self, dictionary):
@@ -137,8 +146,11 @@ class MonitorClientBroker:
     def __init__(self):
         self.server_ref = None
         self.status={}
-
+        # Flags for waiting
         self.ping_recieved = False
+        self.temp_set = False
+        self.data_recieved = False
+
         self.ping_resp_time = 0
         self.ping_req_time = 0
 
@@ -187,6 +199,19 @@ class MonitorClientBroker:
             self.bed = stat['data_bed']
 
         self.data_recieved = True
+
+
+    def set_temp(self, new_temp):
+        self.status['set_temp'] = "not"
+        self.server_ref.callRemote("setTemp",self.status, new_temp).addCallback(self.set_temp_cb)
+
+
+    def set_temp_cb(self, stat):
+        if stat['set_temp'] == 'success':
+            print("new temp setting successful. ")
+        else:
+            print("failed to set temp on server side")
+        self.temp_set=True
 
     def step2(self, two):
         print("got two object:" + str( two))
