@@ -3,6 +3,7 @@ import time
 import busio
 import adafruit_character_lcd.character_lcd_rgb_i2c as character_lcd
 from Hardware_Thermometer import ProbeThermometer
+import threading
 
 
 '''
@@ -23,12 +24,14 @@ class Hardware_Adafruit:
        
        self.controller = c
        self.current_temp = 37.0;
-       self.set_temp = 37.0;
+       self.set_temp = 00.0;
        self.heart_rate = 44;
-        
-        
+
+       self.mutex = threading.Lock()
+       
+       self.state='main'
        self.monitor_string = "T= {:.1f}   HR= {:.0f} \nSet Temp: {:.1f} ".format(self.current_temp, self.heart_rate, self.set_temp) 
-    
+        
         
       #print(monitor_string)
        # Initialise I2C bus.
@@ -72,6 +75,7 @@ class Hardware_Adafruit:
        return
 
    def enter_temp_setting_mode(self):
+       self.state='ts'
        temp_initial = self.current_temp
        set_temp_initial = self.set_temp
        self.clear()
@@ -98,20 +102,27 @@ class Hardware_Adafruit:
 
           if self.lcd.right_button:
              self.set_temp = set_temp_initial
+             
+             self.state='main'
              break
         
           if self.lcd.left_button:
+             self.state='main'
              break
        if self.set_temp > self.current_temp:
           self.lcd.color = [100,0,0]
        if self.set_temp < self.current_temp:
            #self.lcd.color = [0,0,100]
            pass
+   def update_vals(self):
+       print("update vals")
 
    def demo_buttons(self):
        self.playIntro()
        self.clear()
        self.update()
+       self.controller.sensors.start()
+       self.run_ui_thread()
        temp_initial = self.current_temp
        set_temp_initial = self.set_temp
        while(True):
@@ -145,13 +156,46 @@ class Hardware_Adafruit:
                #self.lcd.color = [0,0,100] #green
                #time.sleep(1)
                self.update()
-               #self.lcd.color = [10,0,100]
-   def update(self):
-      self.clear();
-      self.monitor_string = "T= {:.1f}   HR= {:.0f} \nSet Temp: {:.1f} ".format(self.current_temp, self.heart_rate, self.set_temp) 
-      self.printToLCD(self.monitor_string)
-
+               #self.lcd.color = [10,0,100] 
+           else:
+               print("loop: tmp->{} hb->{}".format(self.controller.sensors.get_temp(), self.controller.sensors.get_hb()))
+           
+           self.current_temp = self.controller.sensor.get_temp()
+           self.heart_rate = self.controller.sesnsor.get_hb()
+           
     
+   
+   
+   def update(self):
+      print("update start")
+      #self.mutex.acquire()
+      
+      #self.heart_rate = self.controller.sensors.get_hb()
+      #self.current_temp = self.controller.sensors.get_temp()
+      print("updated temp={} and hb= {}".format(self.current_temp,self.heart_rate))
+      # self.clear();
+      self.monitor_string = "T= {:.1f}   HR= {:.0f} \nSet Temp: {:.1f} ".format(float(self.current_temp),int( self.heart_rate), self.set_temp) 
+      self.printToLCD(self.monitor_string)
+      #self.mutex.release()
+      print("update end")
+   
+   def update_t(self):
+       while(True):
+           if self.state=='main':
+               print("update t before read")
+               self.heart_rate = self.controller.sensors.get_hb()
+               self.current_temp = self.controller.sensors.get_temp()
+               print("updating")
+               self.update()
+           print("...")
+           time.sleep(0.5)
+   
+   def run_ui_thread(self):
+       print("starting ui thread")
+       self.ui_thread = threading.Thread(target = self.update_t ) 
+       self.ui_thread.start()
+
+
 def main():
     af = Hardware_Adafruit()
     af.playIntro()
