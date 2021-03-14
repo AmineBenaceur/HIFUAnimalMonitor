@@ -64,6 +64,7 @@ class MonitorClient:
             print("error occured in runClient: {}".format(e) )
         finally:
             print("leaving runClient()")
+            reactor.stop()
 
         started = False
         time.sleep(1)
