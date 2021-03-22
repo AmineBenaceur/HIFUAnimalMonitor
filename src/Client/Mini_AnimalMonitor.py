@@ -1,6 +1,7 @@
 import sys
 import random
 import time
+import _thread
 
 if sys.version_info > (3, 2):
     # from PySide2 import QtGui, QtCore, QApplication
@@ -31,12 +32,9 @@ TEMP_LOW = 35
 
 class MiniAnimalMonitor(QBase.QWidget):
     def main(self):
-        while(True):
-            new_hb = random.randrange(31, 81, 1)
-            new_temp = random.randrange(34, 39, 1)
-            self.update_readings(new_temp, new_hb)
-            print("In loop")
-            time.sleep(2)
+        ui = _thread.start_new_thread(self.update_readings, ())
+        popup = _thread.start_new_thread(self.monitor_readings, ())
+            
 
     def __init__(self, parent=None):
         '''
@@ -52,7 +50,6 @@ class MiniAnimalMonitor(QBase.QWidget):
 
         # hb and temp reading + set temp
         layout.addWidget(self.widget_title("Readings:"), 1,0,1,1)
-        #uncomment below when widget_readings() done
         layout.addWidget(self.widget_readings(36, 60), 2,0,1,1)
         layout.addWidget(self.widget_title("Set Temp:"), 3,0,1,1)
         layout.addWidget(self.widget_spinbox(), 4, 0, 1, 2)
@@ -151,19 +148,41 @@ class MiniAnimalMonitor(QBase.QWidget):
 
         return Qw
 
-    def update_readings(self, temp, hb):
-        self.tempReading.setText(str(temp))
-        self.hbReading.setText(str(hb))
-        QApplication.processEvents()
+    def update_readings(self):
+        '''
+        2021-03-21: Update temp and hb readings in UI
+        '''
+        while(True):
+            self.new_hb = random.randrange(31, 81, 1)
+            self.new_temp = random.randrange(34, 39, 1)
 
-        if temp >= TEMP_HIGH:
-            self.launch_popup("Temperature is too high")
-        elif temp <= TEMP_LOW:
-            self.launch_popup("Temperature is too low")
-        if hb >= HB_HIGH:
-            self.launch_popup("Heartbeat is too high")
-        elif hb <= HB_LOW:
-            self.launch_popup("Heartbeat is too low")
+            self.tempReading.setText(str(self.new_temp))
+            self.hbReading.setText(str(self.new_hb))
+            QApplication.processEvents()
+
+            time.sleep(5)
+
+    def monitor_readings(self):
+        '''
+        2021-03-21: Monitor temp and hb readings, display warning popup if readings are out of range
+        '''
+        while(True):
+            warning_message = ''
+
+            if self.new_temp >= TEMP_HIGH:
+                warning_message = "Temperature is too high!"
+            elif self.new_temp <= TEMP_LOW:
+                warning_message = "Temperature is too low!"
+
+            if self.new_hb >= HB_HIGH:
+                warning_message += " Heartbeat is too high!"
+            elif self.new_hb <= HB_LOW:
+                warning_message += " Heartbeat is too low!"
+
+            self.popup = QBase.QMessageBox()
+            self.popup.setText(warning_message)
+            self.popup.setStandardButtons(self.popup.Ok)
+            self.popup.show()
 
     def new_temp_set(self):
         print("New temp set at: {} deg".format(self.spinbox.value()))
@@ -173,12 +192,6 @@ class MiniAnimalMonitor(QBase.QWidget):
 
     def disconnect(self):
         print("Disconnected")
-
-    def launch_popup(self, warning_message):
-        self.popup = QBase.QMessageBox()
-        self.popup.setText(warning_message)
-        self.popup.setStandardButtons(self.popup.Ok)
-        self.popup.show()
 
 if __name__ == '__main__':
     app = QBase.QApplication(sys.argv)
