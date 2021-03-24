@@ -32,6 +32,8 @@ time.sleep(1)
 lcd.color = [50, 0, 50]
 time.sleep(1)
 lcd.clear()
+
+print("half")
 # Print two line message right to left
 lcd.text_direction = lcd.RIGHT_TO_LEFT
 lcd.message = "Hello\nCircuitPython"
