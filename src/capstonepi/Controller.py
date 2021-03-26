@@ -4,7 +4,7 @@
 '''
 
 from Hardware_Adafruit import Hardware_Adafruit
-from Hardware_Thermometer import ProbeThermometer
+#from Hardware_Thermometer import ProbeThermometer
 from HardwareSensors import ArduinoSensors
 class Controller():
 

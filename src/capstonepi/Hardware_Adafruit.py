@@ -2,7 +2,7 @@ import board
 import time
 import busio
 import adafruit_character_lcd.character_lcd_rgb_i2c as character_lcd
-from Hardware_Thermometer import ProbeThermometer
+#from Hardware_Thermometer import ProbeThermometer
 import threading
 
 
@@ -58,10 +58,6 @@ class Hardware_Adafruit:
        time.sleep(2.5)
 
  
-
-#    def printMonitor(self);
- #       pass 
-
    def dec_temp(self):
        self.set_temp = self.set_temp - 0.1;
 

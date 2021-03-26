@@ -62,10 +62,8 @@ try:
 except Exception as e:
     print("Issue with connecting TCP")
     print(e)
-    return
 try:
     reactor.run()
 except Exception as e1:
     print("Issue with Runnign reactor")
     print(e1)
-    return
