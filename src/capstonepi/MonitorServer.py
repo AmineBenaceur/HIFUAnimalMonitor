@@ -2,23 +2,35 @@ from twisted.spread import pb
 from twisted.internet import reactor
 import time
 import random
+from HardwareSensors import ArduinoSensors
 
 '''
 #2020-02-28 AB: Animal monitor server class to be run on the Raspberry Pi
 '''
+HOST_PORT = 8800
+HOST_IP = '10.0.0.126'
+
+
 class SensorData(pb.Referenceable):
     def remote_print(self, arg):
         print("two.print was given", arg)
 
 class MonitorServer(pb.Root):
-    def __init__(self, sd):
+    def __init__(self, sd, arduino_sensors):
         #pb.Root.__init__(self)   # pb.Root doesn't implement __init__
         self.sensor_data = sd
         self.status = {}
-
-        self.t= 37
-        self.hb=50
+        self.sensors = arduino_sensors
         self.set_t = -1
+        
+    def start_server_thread(self):
+        #Todo start server in thread
+        pass
+
+    def run_server(self):
+        #Run server 
+        pass 
+
     def remote_connect(self):
         print("Connection Request Recieved")
         self.status['connect'] = 'success'
@@ -49,9 +61,9 @@ class MonitorServer(pb.Root):
         2021-02-28 AB: Return Sensor Data
         '''
         self.status['data'] = 'success'
-        self.status['data_probe'] = random.randint(30,40)
-        self.status['data_hb'] = random.randint(60,80)
-        self.status['data_bed'] = random.randint(40,50)
+        self.status['data_probe'] = self.sensors.get_temp()
+        self.status['data_hb'] = self.sensors.get_hb()
+        self.status['data_bed'] = self.sensors.get_k_temp()
 
         return self.status
     def remote_setTemp(self, stat,nt):
@@ -66,8 +78,8 @@ class MonitorServer(pb.Root):
         return self.status
 
 sd = SensorData()
-
-
-root_obj = MonitorServer(sd)
-reactor.listenTCP(8800, pb.PBServerFactory(root_obj))
+s = ArduinoSensors()
+s.start()
+root_obj = MonitorServer(sd,s)
+reactor.listenTCP(HOST_PORT, pb.PBServerFactory(root_obj))
 reactor.run()
