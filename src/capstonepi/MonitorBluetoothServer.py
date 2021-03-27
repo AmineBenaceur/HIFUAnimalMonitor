@@ -4,13 +4,13 @@ AB: Simple bluetooth server to communicate Heartbeat and temp data
 
 import bluetooth
 
-hostMACAddress = 'B8:27:EB:80:42:0A'
+hostMACAddress = 'b8:27:eb:2a:e8:a0'
 port =3
 backlog=1
 size=1024
 
-s = bluetooth.BluetoothSocker(bluetooth.RFCOMM)
-s.bind((hostMACAdress, port))
+s = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+s.bind((hostMACAddress, port))
 s.listen(backlog)
 
 try:
