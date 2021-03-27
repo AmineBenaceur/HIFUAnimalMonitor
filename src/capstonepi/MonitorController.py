@@ -16,11 +16,12 @@ class Monitor_Controller:
     def launch_pid_process(self,set_point):
         print("launched PID for set_point = {}".format(set_point))
         
-    def enter_temp_setting_mode(self):
+    def enter_temp_setting_mode_T(self):
         start_temp = self.sensors.temp
         self.screen.launch_set_menu(start_temp)
         temp_val = start_temp
-        
+        self.screen.switch_color_yellow()
+
         while True:
             if self.screen.lcd.up_button:
                 temp_val += 0.1

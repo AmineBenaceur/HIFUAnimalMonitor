@@ -26,14 +26,9 @@ class ArduinoSensors():
     
     def set_k_temp(self,k):
         self.k_temp = k
-        #print("new K-temp set == {}".format(k))
 
     def get_temp(self):
-        
-        print("gettemp start")
-        #self.temp_mutex.acquire()
         r = self.temp
-        #self.temp_mutex.release()
         return r
         
         #print("gettemp end")
