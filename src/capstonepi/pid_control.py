@@ -4,7 +4,7 @@ AB: A threaded P.I.D Controller
 
 from HardwareSensors import ArduinoSensors
 import time
-import PID
+import wiki_PID as PID
 
 def main():
     print("hello")

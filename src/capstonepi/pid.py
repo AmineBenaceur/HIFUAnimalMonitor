@@ -1,6 +1,6 @@
 from HardwareSensors import ArduinoSensors
 import os
-import PID
+import wiki_PID as PID
 import time
 import RPi.GPIO as IO
 from datetime import datetime

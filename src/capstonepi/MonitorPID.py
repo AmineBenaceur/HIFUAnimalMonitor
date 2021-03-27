@@ -5,7 +5,7 @@ AB: A threaded PID controller module, used to heat up an expiremental bed for a 
 
 from HardwareSensors import ArduinoSensors
 import time
-import PID
+import wiki_PID as PID
 import RPi.GPIO as IO
 from datetime import datetime
 import yaml
