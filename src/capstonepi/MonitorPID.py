@@ -9,6 +9,7 @@ import PID
 import RPi.GPIO as IO
 from datetime import datetime
 import yaml
+from threading import Thread
 
 '''
 AB: Config file w/ constants
@@ -47,20 +48,40 @@ class Monitor_PID:
         IO.setwarnings(False)
         IO.setmode(IO.BCM)
         IO.setup(19,IO.OUT)
-
         self.pwm_out = IO.PWM(19,100)
+        
+        #only 1 thread should be running
+        self.thread = None
 
-
+    def is_running(self):
+        if self.thread is None:
+            return False
+        else:
+            return True
 
     def read_config(self, filename):
         with open(filename) as f:
             config = yaml.safe_load(f)
-        print (config)
         return config
 
     def start_pid_thread(self, set_point, probe_ref = True, save_output=False):
-        pass
+        if (self.thread != None):
+            self.stop_pid_thread()
+        
+        self.flag_stop_pid = False
+        self.flag_confirm_stop = False
+ 
+        #AB: create a worker thread
+        self.thread = Thread(target = self.pid_process, args = (set_point,probe_ref, save_output, ) )
+        self.thread.start()
+        print("PID Process started")
 
+    def stop_pid_thread(self):
+        self.flag_stop_pid = True
+        self.thread.join()
+        print("PID Process terminated")
+        self.thread = None
+        self.flag_confirm_stop=True
     def pid_process(self,set_point,probe_ref =True, save_output=False ):
         '''
         AB: Start the PID pocess, if probe ref= True use probe temp, else use surface temp (K-type)
@@ -112,11 +133,20 @@ class Monitor_PID:
 
             print(" Target: {} | Current: {} | PWM: {} |  Time {:.2f} ".format(self.pid.SetPoint, temp, targetPWM, (time.time()-start_time) ))
 
+        self.pwm_out.ChangeDutyCycle(0) # Make sure no heating happens after this point
         self.flag_confirmed_stop = True
 
-
+'''
      
 s = ArduinoSensors()
 s.start()
 p = Monitor_PID(s)
-p.pid_process(30, probe_ref=False,save_output=False)  
+#p.pid_process(30, probe_ref=False,save_output=False)  
+p.start_pid_thread(30,True,False)
+time.sleep(10)
+p.stop_pid_thread()
+p.start_pid_thread(40,False,False)
+time.sleep(15)
+p.stop_pid_thread()
+print("end")
+'''

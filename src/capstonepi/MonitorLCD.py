@@ -34,6 +34,8 @@ class Monitor_LCD:
         # Set LCD color to green
         self.lcd.color = [100,0,0]
     
+    def clear(self):
+        self.lcd.clear()
     def play_intro(self):
         self.lcd.blink = True
         self.switch_color_yellow()

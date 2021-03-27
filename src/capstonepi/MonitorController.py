@@ -1,12 +1,18 @@
 from MonitorLCD import Monitor_LCD
 import time
 from HardwareSensors import ArduinoSensors
-
+from MonitorPID import Monitor_PID
 
 class Monitor_Controller:
     def __init__(self):
+        #AB : Initilize screen
         self.screen = Monitor_LCD()
+        
+        #AB : Initialize sensors from arduino
         self.sensors = ArduinoSensors()
+        
+        #AB : Initilize PID controller
+        self.heater = Monitor_PID(self.sensors)
 
         self.current_temp = 0
         self.current_hb = 0
@@ -21,20 +27,38 @@ class Monitor_Controller:
         self.screen.launch_set_menu(start_temp)
         temp_val = start_temp
         self.screen.switch_color_yellow()
-
+        up_counter = 0
+        down_counter= 0
         while True:
             if self.screen.lcd.up_button:
-                temp_val += 0.1
+                down_counter = 0
+                up_counter += 1
+                if(up_counter > 7):
+                    temp_val += 0.5
+                else:
+                    temp_val += 0.1
                 self.screen.update_set_menu(temp_val)
             if self.screen.lcd.down_button:
-                temp_val -= 0.1
+                up_counter = 0
+                down_counter += 1
+                if(down_counter > 7):
+                    temp_val -= 0.5
+                else:
+                    temp_val -=0.1
+                
                 self.screen.update_set_menu(temp_val)
             if self.screen.lcd.right_button:
                 self.current_set = temp_val
-                self.launch_pid_process(self.current_set)
+                self.heater.start_pid_thread(self.current_set)
+                self.screen.clear()
                 self.screen.switch_color_red()
                 break
             if self.screen.lcd.left_button:
+                if self.heater.is_running():
+                    self.screen.clear()
+                else:
+                    self.screen.switch_color_green()
+                self.screen.clear()
                 break
 
     def run_app(self):
@@ -46,9 +70,9 @@ class Monitor_Controller:
 
         while True:
             if self.screen.lcd.up_button:
-               self.enter_temp_setting_mode()
+               self.enter_temp_setting_mode_T()
             if self.screen.lcd.down_button:
-               self.enter_temp_setting_mode()
+               self.enter_temp_setting_mode_T()
             if self.screen.lcd.right_button:
                 self.screen.set_msg("right")
                 time.sleep(0.5)
