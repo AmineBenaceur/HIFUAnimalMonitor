@@ -2,6 +2,8 @@ from MonitorLCD import Monitor_LCD
 import time
 from HardwareSensors import ArduinoSensors
 from MonitorPID import Monitor_PID
+from MonitorServer import MonitorServer, MockController
+
 
 class Monitor_Controller:
     def __init__(self):
@@ -61,7 +63,11 @@ class Monitor_Controller:
                 self.screen.clear()
                 break
 
-    def run_app(self):
+    def run(self):
+        ms = MonitorServer(self.sensors, MockController())
+        ms.start_server_threaded([(self._main_loop, tuple(), {}, )])
+
+    def _main_loop(self):
         self.sensors.start()
         self.screen.play_intro()
         self.screen.launch_main_menu()
@@ -94,5 +100,6 @@ s = Monitor_LCD()
 s.play_intro()
 '''
 
-mc = Monitor_Controller()
-mc.run_app()
+if __name__ == "__main__":
+    mc = Monitor_Controller()
+    mc.run_app()

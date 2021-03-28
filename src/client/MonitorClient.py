@@ -1,5 +1,7 @@
 from twisted.spread import pb
-from twisted.internet import reactor
+from twisted.internet import reactor, threads
+from collections import deque
+import sys
 import time
 import threading
 import random
@@ -32,7 +34,7 @@ class MonitorClientBroker:
         # store the server refrence
         self.server_ref = obj
         print("Attempting Connection with server...")
-        self.server_ref.callRemote("connect").addCallback(self.connect_cb)
+        self.server_ref.callRemote("register").addCallback(self.connect_cb)
 
     def connect_cb(self, stat):
         print("client connection successfully established.")
@@ -88,26 +90,85 @@ class MonitorClientBroker:
         self.server_ref.callRemote("checkTwo", two)
 
 
+class DataReciver(pb.Referenceable):
+
+    def __init__(self, maxlen=10):
+        self.data = deque(maxlen=maxlen)
+
+    def remote_transfer(self, data):
+        print(self.data, file=sys.stderr)
+        self.data.appendleft(data)
+
+    def get(self):
+
+        return self.data.pop()
+
 class MonitorClient:
     '''
     2021-02-28 AB: Class responsible of communicating with monitorserver though contolling the client boker
     '''
 
-    def __init__(self):
-        self.mcb = MonitorClientBroker()
+    def __init__(self, data_reciever):
         self.factory = pb.PBClientFactory()
-        self.reactor = reactor
+        self.data_reciever = data_reciever
+        self.uuid = None
 
-        # TODO: INSTANTIATE QUEUE
-        self.queue = []
-
-    def start(self):
+    def connect(self, host="localhost", port=8800):
         '''
         2021-02-28 AB: Runs the Client in sequential mode (main)
         '''
-        self.reactor.connectTCP("localhost", 8800, self.factory)
-        self.factory.getRootObject().addCallback(self.mcb.connect)
-        self.reactor.run()
+        reactor.connectTCP(host, port, self.factory)
+        self.factory.getRootObject().addCallback(self._client_connected)
+        reactor.run()
+
+    def connect_threaded(self, other_threads, *args, **kwargs):
+        threads.callMultipleInThread(other_threads)
+        self.connect(*args, **kwargs)
+
+    def _client_connected(self, obj):
+        self.server = obj
+
+        d = self.server.callRemote("register", self.data_reciever)
+        d.addCallback(self._recv_register)
+
+    def _recv_register(self, uuid):
+        print(f"UUID: {uuid}", file=sys.stderr)
+        self.uuid = uuid
+
+    def _disconnect(self):
+        try:
+            return self.server.callRemote("unregister", self.uuid)
+        except pb.DeadReferenceError:
+            print("Could not disconnect stale connection", file=sys.stderr)
+
+    def quit(self):
+        d = self.server.callRemote("unregister", self.uuid)
+        if d:
+            d.addCallback(self._recv_unregister)
+
+    def _recv_unregister(self, _):
+        print("Unregistered from server", file=sys.stderr)
+        reactor.callFromThread(reactor.stop)
+
+    def ping(self):
+        self.server.callRemote("ping", time.time()).addCallback(self._recv_ping)
+
+    def _recv_ping(self, args):
+        call_time, server_recv_time = args
+        t = time.time()
+        print(f"To Server Delay: {server_recv_time - call_time}")
+        print(f"RTT: {t - call_time}")
+
+    def start_transfer(self):
+        """WIP"""
+        self.server.callRemote("start_transfer", self.uuid)
+
+    def stop_transfer(self):
+        """WIP"""
+        self.server.callRemote("stop_transfer", self.uuid)
+
+    def fetch_data(self, callback=print):
+        self.server.callRemote("get_data", self.uuid).addCallback(callback)
 
     def runClient(self):
         '''
@@ -127,87 +188,38 @@ class MonitorClient:
 
         time.sleep(1)
 
-    def ping(self):
-        self.mcb.ping_server()
-        while not self.mcb.ping_recieved:
+    def set_data(self, new_data):
+        d = self.server.callRemote("set_data", new_data)
+        d.addCallback(self._recv_set_data)
+
+    def _recv_set_data(self, server_resp):
+        print(f"temp_set: {server_resp}")
+
+def _mock_main_thread(mc):
+    print("This is the mock main")
+    while True:
+        action = input(">>> ")
+        if action == "ping":
+            reactor.callFromThread(mc.ping)
+        elif action == "start":
+            reactor.callFromThread(mc.start_transfer)
             time.sleep(1)
-            print("awaiting sever ping response")
-        if self.mcb.ping_recieved:
-            self.ping_ms = self.mcb.ping_resp_time - self.mcb.ping_req_time
-        print("PING = {}".format(self.ping_ms))
-
-    def get_data(self):
-        '''
-        2021-02-28 AB: calls getData to get sensor info
-        '''
-        self.mcb.get_data()
-
-        while not self.mcb.data_recieved:
-            time.sleep(0.5) # do nothin
-        if self.mcb.status['data'] == 'success':
-            print(" Recieved serve data PROBE={} , BED={}, HB={}".format(self.mcb.probe, self.mcb.bed, self.mcb.hb))
-            # TODO:
-            '''
-            add data to Queue
-            make dictionary
-            d= {}
-            d['time'] = time.time()
-            d['probe']
-            .
-            .
-            add to self.queue
-            '''
-            data = {}
-            data['time'] = time.time()
-            data['probe'] = self.mcb.probe
-            data['bed'] = self.mcb.bed
-            data['hb'] = self.mcb.hb
-            self.addToQueue(data)
-            self.getQueue()
-        else:
-            print("Something went wrong in remote getData()")
-
-    def set_new_temp(self, t):
-        self.mcb.temp_set = False
-        self.mcb.set_temp(t)
-        while not self.mcb.temp_set:
-            time.sleep(0.5) # do nothing
-        print("new temp={} set complete".format(t))
-
-    def addToQueue(self, dictionary):
-        # TODO ADD_TOQUEUE
-        self.queue.append(dictionary)
-
-    def getQueue(self):
-        # TODO FUNCTION: GET_QUEUE
-        dataTemp = self.queue.pop(0)
-        print(" Queue server data PROBE={} , BED={}, HB={}".format(dataTemp['probe'], dataTemp['bed'], dataTemp['hb']))
-        return dataTemp
+            reactor.callFromThread(mc.start_transfer)
+        elif action == "data":
+            reactor.callFromThread(mc.fetch_data)
+        elif "set" in action:
+            reactor.callFromThread(
+                mc.set_data, int("".join(action.split()[1:])))
+        elif action == "quit":
+            reactor.callFromThread(mc.quit)
+            break
+    print("finished")
 
 
-def main():
-    # mc = MonitorClientBroker()
-    # factory = pb.PBClientFactory()
-    # reactor.connectTCP("localhost", 8800, factory)
-    # factory.getRootObject().addCallback(mc.connect)
-    # reactor.run()
-    mc = MonitorClient()
-    # mc.start()
-    try:
-        mc.runClient()
-        while(True):
-            print("____________________ Test Ping _________________")
-            time.sleep(2)
-            mc.ping()
-            print("____________________ Test get_data  _________________")
-            time.sleep(2)
-            mc.get_data()
-            print("____________________ Test set_temp  _________________")
-            time.sleep(2)
-            mc.set_new_temp(random.randint(30,40))
-    except Exception as e:
-        print(e)
-
+def main2():
+    dr = DataReciver()
+    mc = MonitorClient(dr)
+    mc.connect_threaded([(_mock_main_thread, (mc,), {}, )])
 
 if __name__ == "__main__":
-    main()
+    main2()

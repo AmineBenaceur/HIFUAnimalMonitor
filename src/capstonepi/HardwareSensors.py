@@ -2,7 +2,6 @@ import serial
 import time
 import threading
 
-
 class ArduinoSensors():
     def __init__(self):
         self.ser = serial.Serial('/dev/ttyACM0', 9600, timeout=10)
@@ -147,6 +146,18 @@ class ArduinoSensors():
         self.thread.start()
         # self.thread.join()
         #print("Arduino thread terminated")
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return {
+            "probe": self.sensors.get_temp(),
+            "hb": self.sensors.get_hb(),
+            "bed": self.sensors.get_k_temp()
+        }
+
+
 '''
                     
 def main():    
