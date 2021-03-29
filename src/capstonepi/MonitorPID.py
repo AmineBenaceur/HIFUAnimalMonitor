@@ -103,7 +103,7 @@ class Monitor_PID:
             I = float(self.config['PID']['Surface']['I'])
             D = float(self.config['PID']['Surface']['D']) 
         #write constants to file
-        const_str = "P: {} | I: {} | D: {}".format(P,I,D)
+        const_str = "P: {} | I: {} | D: {} \n ".format(P,I,D)
         f.write(const_str)
         print(const_str)
 
@@ -141,7 +141,7 @@ class Monitor_PID:
             #AB: change the dutycyle based on PID output
             self.pwm_out.ChangeDutyCycle(targetPWM) 
             time.sleep(sample_time)
-            str_log = " Target: {} | Current: {} | PWM: {} |  Time {:.2f} ".format(self.pid.SetPoint, temp, targetPWM, (time.time()-start_time) )
+            str_log = " Target: {} | Current: {} | PWM: {} |  Time {:.2f} \n".format(self.pid.SetPoint, temp, targetPWM, (time.time()-start_time) )
 
             print(str_log)
             f.write(str_log)
