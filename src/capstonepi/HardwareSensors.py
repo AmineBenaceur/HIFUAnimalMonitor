@@ -152,9 +152,9 @@ class ArduinoSensors():
 
     def __next__(self):
         return {
-            "probe": self.sensors.get_temp(),
-            "hb": self.sensors.get_hb(),
-            "bed": self.sensors.get_k_temp()
+            "probe": self.get_temp(),
+            "hb": self.get_hb(),
+            "bed": self.get_k_temp()
         }
 
 

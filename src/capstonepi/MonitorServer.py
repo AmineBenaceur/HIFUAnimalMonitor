@@ -11,7 +11,7 @@ from random import randint
 #2020-02-28 AB: Animal monitor server class to be run on the Raspberry Pi
 '''
 HOST_IP = '10.0.0.126'
-
+#HOST_IP = "localhost"
 
 class MockController():
     def set(self, vals):
@@ -33,6 +33,9 @@ class MonitorServer(pb.Root):
         self.controller = controller
         self.clients = {}
 
+        self.new_temp = 0
+        self.is_temp_set = True
+    
     def start_server_threaded(self, other_threads, *args, **kwargs):
         threads.callMultipleInThread(other_threads)
         self.start_server(*args, **kwargs)
@@ -99,6 +102,10 @@ class MonitorServer(pb.Root):
         print(f"Server recive time: {server_time - call_time}")
         return call_time, server_time
 
+    def remote_set_temp(self, new_temp):
+        self.is_temp_set = True
+        self.new_temp = float(new_temp)
+        return new_temp
 
 
 def _mock_main_thread():

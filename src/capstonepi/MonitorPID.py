@@ -11,6 +11,7 @@ from datetime import datetime
 import yaml
 from threading import Thread
 
+
 '''
 AB: Config file w/ constants
 '''
@@ -68,6 +69,7 @@ class Monitor_PID:
         if (self.thread != None):
             self.stop_pid_thread()
         
+
         self.flag_stop_pid = False
         self.flag_confirm_stop = False
  
@@ -86,7 +88,11 @@ class Monitor_PID:
         '''
         AB: Start the PID pocess, if probe ref= True use probe temp, else use surface temp (K-type)
         '''
-        
+        # AB: create file to save to
+        test_dir_path = '/home/pi/HIFUAnimalMonitor/src/calibration/test_logs/'
+        filename = test_dir_path + datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p") + '.txt'
+        f = open(filename,"w+")
+
         # AB: load PID, depending on Surface or Probe based heating
         if probe_ref:
             P = float(self.config['PID']['Probe']['P']) 
@@ -96,6 +102,11 @@ class Monitor_PID:
             P = float(self.config['PID']['Surface']['P'])
             I = float(self.config['PID']['Surface']['I'])
             D = float(self.config['PID']['Surface']['D']) 
+        #write constants to file
+        const_str = "P: {} | I: {} | D: {}".format(P,I,D)
+        f.write(const_str)
+        print(const_str)
+
 
         #AB: load sample time
         sample_time = float(self.config['PID']['Sample_time'])
@@ -130,12 +141,15 @@ class Monitor_PID:
             #AB: change the dutycyle based on PID output
             self.pwm_out.ChangeDutyCycle(targetPWM) 
             time.sleep(sample_time)
+            str_log = " Target: {} | Current: {} | PWM: {} |  Time {:.2f} ".format(self.pid.SetPoint, temp, targetPWM, (time.time()-start_time) )
 
-            print(" Target: {} | Current: {} | PWM: {} |  Time {:.2f} ".format(self.pid.SetPoint, temp, targetPWM, (time.time()-start_time) ))
-
+            print(str_log)
+            f.write(str_log)
+        
+        #AB: Cleanup
         self.pwm_out.ChangeDutyCycle(0) # Make sure no heating happens after this point
         self.flag_confirmed_stop = True
-
+        f.close()
 '''
      
 s = ArduinoSensors()

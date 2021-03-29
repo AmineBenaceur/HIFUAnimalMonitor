@@ -19,6 +19,7 @@ class Monitor_Controller:
         self.current_temp = 0
         self.current_hb = 0
         self.current_set = 0
+        self.client_temp_set = False
         
         self.state='main'
     def launch_pid_process(self,set_point):
@@ -63,8 +64,19 @@ class Monitor_Controller:
                 self.screen.clear()
                 break
 
+    def set(self, set_val):
+        print("must set:")
+        print(set_val)
+        self.current_set = set_val
+        self.client_temp_set = True
+        self.heater.start_pid_thread(self.current_set)
+        self.screen.clear()
+        self.screen.switch_color_red()
+        return True
+   
     def run(self):
-        ms = MonitorServer(self.sensors, MockController())
+        #ms = MonitorServer(self.sensors, MockController())
+        ms = MonitorServer(self.sensors, self)
         ms.start_server_threaded([(self._main_loop, tuple(), {}, )])
 
     def _main_loop(self):
@@ -90,6 +102,8 @@ class Monitor_Controller:
                 time.sleep(0.5)
 
             self.screen.update_readings(self.sensors.hb,self.sensors.temp, self.current_set)
+   
+
     '''
     def update_screen_readings(self):
         if(self.state =='main'):
@@ -102,4 +116,4 @@ s.play_intro()
 
 if __name__ == "__main__":
     mc = Monitor_Controller()
-    mc.run_app()
+    mc.run()
