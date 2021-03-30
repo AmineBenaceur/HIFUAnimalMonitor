@@ -24,7 +24,13 @@ class Monitor_Controller:
         self.state='main'
     def launch_pid_process(self,set_point):
         print("launched PID for set_point = {}".format(set_point))
-        
+    def new_set_value(self, val):
+        self.current_set = val
+        self.heater.start_pid_thread(self.current_set)
+        #self.screen.clear()
+        self.screen.switch_color_red()
+        self.client_set_temp = False
+
     def enter_temp_setting_mode_T(self):
         start_temp = self.sensors.temp
         self.screen.launch_set_menu(start_temp)
@@ -51,27 +57,29 @@ class Monitor_Controller:
                 
                 self.screen.update_set_menu(temp_val)
             if self.screen.lcd.right_button:
-                self.current_set = temp_val
-                self.heater.start_pid_thread(self.current_set)
+                #self.current_set = temp_val
+                #self.heater.start_pid_thread(self.current_set)
+                #self.screen.clear()
+                #self.screen.switch_color_red()
                 self.screen.clear()
-                self.screen.switch_color_red()
+                self.new_set_value(temp_val)
                 break
             if self.screen.lcd.left_button:
                 if self.heater.is_running():
                     self.screen.clear()
                 else:
                     self.screen.switch_color_green()
-                self.screen.clear()
-                break
+                    self.screen.clear()
+                    break
 
     def set(self, set_val):
-        print("must set:")
-        print(set_val)
+        #print("must set:")
+        #print(set_val)
         self.current_set = set_val
         self.client_temp_set = True
-        self.heater.start_pid_thread(self.current_set)
-        self.screen.clear()
-        self.screen.switch_color_red()
+        #self.heater.start_pid_thread(self.current_set)
+        #self.screen.clear()
+        #self.screen.switch_color_red()
         return True
    
     def run(self):
@@ -100,7 +108,8 @@ class Monitor_Controller:
             if self.screen.lcd.select_button:
                 self.screen.set_msg("select")
                 time.sleep(0.5)
-
+            if self.client_temp_set:
+                self.new_set_value(self.current_set)
             self.screen.update_readings(self.sensors.hb,self.sensors.temp, self.current_set)
    
 

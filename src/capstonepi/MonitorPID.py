@@ -89,9 +89,13 @@ class Monitor_PID:
         AB: Start the PID pocess, if probe ref= True use probe temp, else use surface temp (K-type)
         '''
         # AB: create file to save to
-        test_dir_path = '/home/pi/HIFUAnimalMonitor/src/calibration/test_logs/'
-        filename = test_dir_path + datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p") + '.txt'
-        f = open(filename,"w+")
+        
+        save_output = self.config['PID']['Save_logs'] 
+
+        if save_output:
+            test_dir_path = '/home/pi/HIFUAnimalMonitor/src/calibration/test_logs/'
+            filename = test_dir_path + datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p") + '.txt'
+            f = open(filename,"w+")
 
         # AB: load PID, depending on Surface or Probe based heating
         if probe_ref:
@@ -104,7 +108,8 @@ class Monitor_PID:
             D = float(self.config['PID']['Surface']['D']) 
         #write constants to file
         const_str = "P: {} | I: {} | D: {} \n ".format(P,I,D)
-        f.write(const_str)
+        if save_output:
+            f.write(const_str)
         print(const_str)
 
 
@@ -144,12 +149,14 @@ class Monitor_PID:
             str_log = " Target: {} | Current: {} | PWM: {} |  Time: {:.2f} \n".format(self.pid.SetPoint, temp, targetPWM, (time.time()-start_time) )
 
             print(str_log)
-            f.write(str_log)
+            if save_output:
+                f.write(str_log)
         
         #AB: Cleanup
         self.pwm_out.ChangeDutyCycle(0) # Make sure no heating happens after this point
         self.flag_confirmed_stop = True
-        f.close()
+        if save_output:
+            f.close()
 '''
      
 s = ArduinoSensors()
