@@ -2,9 +2,9 @@ PID:
         Sample_time: 1
 
         Probe:
-                P: 20
-                I: 5
-                D: 1
+                P: 10
+                I: 0
+                D: 0
         Surface:
                 P: 20
                 I: 5
