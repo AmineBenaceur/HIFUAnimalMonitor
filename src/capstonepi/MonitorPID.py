@@ -141,7 +141,7 @@ class Monitor_PID:
             #AB: change the dutycyle based on PID output
             self.pwm_out.ChangeDutyCycle(targetPWM) 
             time.sleep(sample_time)
-            str_log = " Target: {} | Current: {} | PWM: {} |  Time {:.2f} \n".format(self.pid.SetPoint, temp, targetPWM, (time.time()-start_time) )
+            str_log = " Target: {} | Current: {} | PWM: {} |  Time: {:.2f} \n".format(self.pid.SetPoint, temp, targetPWM, (time.time()-start_time) )
 
             print(str_log)
             f.write(str_log)
