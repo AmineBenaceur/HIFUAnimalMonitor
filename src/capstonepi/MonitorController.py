@@ -42,7 +42,9 @@ class Monitor_Controller:
             if self.screen.lcd.up_button:
                 down_counter = 0
                 up_counter += 1
-                if(up_counter > 7):
+                if (up_counter >=10):
+                    temp_val += 1
+                elif((up_counter >= 7) and (up_counter <10)):
                     temp_val += 0.5
                 else:
                     temp_val += 0.1
@@ -50,7 +52,9 @@ class Monitor_Controller:
             if self.screen.lcd.down_button:
                 up_counter = 0
                 down_counter += 1
-                if(down_counter > 7):
+                if (down_counter >= 10):
+                    temp_val -= 1
+                elif((down_counter >= 7) and (down_counter < 10)):
                     temp_val -= 0.5
                 else:
                     temp_val -=0.1
@@ -66,7 +70,9 @@ class Monitor_Controller:
                 break
             if self.screen.lcd.left_button:
                 if self.heater.is_running():
+                    self.screen.switch_color_red() #Added here
                     self.screen.clear()
+                    break
                 else:
                     self.screen.switch_color_green()
                     self.screen.clear()
@@ -91,7 +97,7 @@ class Monitor_Controller:
         self.sensors.start()
         self.screen.play_intro()
         self.screen.launch_main_menu()
-        time.sleep(1)
+        #time.sleep(1)
         #update initial readings
 
         while True:
