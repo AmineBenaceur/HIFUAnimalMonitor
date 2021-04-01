@@ -2,9 +2,9 @@ PID:
         Sample_time: 1
         Save_logs: True
         Probe:
-                P: 15
+                P: 9.25
                 I: 0.1
-                D: 3.2
+                D: 3.75
         Surface:
                 P: 20
                 I: 5
