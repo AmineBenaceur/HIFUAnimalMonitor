@@ -3,8 +3,8 @@ PID:
         Save_logs: True
         Probe:
                 P: 15
-                I: 1
-                D: 3
+                I: 0.1
+                D: 3.2
         Surface:
                 P: 20
                 I: 5
