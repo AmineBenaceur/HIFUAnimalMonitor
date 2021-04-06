@@ -3,7 +3,9 @@ import time
 from HardwareSensors import ArduinoSensors
 from MonitorPID import Monitor_PID
 from MonitorServer import MonitorServer, MockController
-
+'''
+    AB: Class responsible for handling application logic, starting the servers and making all work together. 
+'''
 
 class Monitor_Controller:
     def __init__(self):
