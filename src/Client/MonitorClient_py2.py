@@ -9,7 +9,8 @@ import random
 #2020-02-28 AB: Client Class running within MORPHEUS
 '''
 
-
+HOST_IP = '192.168.137.239'
+HOST_PORT = 8800
 class MonitorClientBroker:
     '''
     2021-02-28 AB: Class responsible for direct communication with server
@@ -96,7 +97,7 @@ class DataReciver(pb.Referenceable):
         self.data = deque(maxlen=maxlen)
 
     def remote_transfer(self, data):
-        print(self.data, file=sys.stderr)
+        print(self.data)
         self.data.appendleft(data)
 
     def get(self):
@@ -113,7 +114,7 @@ class MonitorClient:
         self.data_reciever = data_reciever
         self.uuid = None
 
-    def connect(self, host="localhost", port=8800):
+    def connect(self, host="192.168.137.239", port=8800):
         '''
         2021-02-28 AB: Runs the Client in sequential mode (main)
         '''
@@ -122,6 +123,7 @@ class MonitorClient:
         reactor.run()
 
     def connect_threaded(self, other_threads, *args, **kwargs):
+        print(args,kwargs)
         threads.callMultipleInThread(other_threads)
         self.connect(*args, **kwargs)
 
@@ -132,14 +134,14 @@ class MonitorClient:
         d.addCallback(self._recv_register)
 
     def _recv_register(self, uuid):
-        print(f"UUID: {uuid}", file=sys.stderr)
+        print("UUID: {}".format(uuid))
         self.uuid = uuid
 
     def _disconnect(self):
         try:
             return self.server.callRemote("unregister", self.uuid)
         except pb.DeadReferenceError:
-            print("Could not disconnect stale connection", file=sys.stderr)
+            print("Could not disconnect stale connection")
 
     def quit(self):
         d = self.server.callRemote("unregister", self.uuid)
@@ -147,7 +149,7 @@ class MonitorClient:
             d.addCallback(self._recv_unregister)
 
     def _recv_unregister(self, _):
-        print("Unregistered from server", file=sys.stderr)
+        print("Unregistered from server")
         reactor.callFromThread(reactor.stop)
 
     def ping(self):
@@ -156,8 +158,8 @@ class MonitorClient:
     def _recv_ping(self, args):
         call_time, server_recv_time = args
         t = time.time()
-        print(f"To Server Delay: {server_recv_time - call_time}")
-        print(f"RTT: {t - call_time}")
+        print("To Server Delay: {}".format(server_recv_time - call_time))
+        print("RTT: {}".format(t - call_time))
 
     def start_transfer(self):
         """WIP"""
@@ -166,9 +168,13 @@ class MonitorClient:
     def stop_transfer(self):
         """WIP"""
         self.server.callRemote("stop_transfer", self.uuid)
+    def pprint(*args, **kwargs):
+        print(args,kwargs)
 
-    def fetch_data(self, callback=print):
+    def fetch_data(self, callback=pprint):
         self.server.callRemote("get_data", self.uuid).addCallback(callback)
+
+
 
     def runClient(self):
         '''
@@ -193,7 +199,7 @@ class MonitorClient:
         d.addCallback(self._recv_set_data)
 
     def _recv_set_data(self, server_resp):
-        print(f"temp_set: {server_resp}")
+        print("temp_set: {}".format(server_resp))
 
 def _mock_main_thread(mc):
     print("This is the mock main")
