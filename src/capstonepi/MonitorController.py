@@ -3,6 +3,7 @@ import time
 from HardwareSensors import ArduinoSensors
 from MonitorPID import Monitor_PID
 from MonitorServer import MonitorServer, MockController
+import threading
 '''
     AB: Class responsible for handling application logic, starting the servers and making all work together. 
 '''
@@ -22,7 +23,7 @@ class Monitor_Controller:
         self.current_hb = 0
         self.current_set = 0
         self.client_temp_set = False
-        
+        self.mutex = threading.Lock()
         self.state='main'
     def launch_pid_process(self,set_point):
         print("launched PID for set_point = {}".format(set_point))
@@ -31,7 +32,17 @@ class Monitor_Controller:
         self.heater.start_pid_thread(self.current_set)
         #self.screen.clear()
         self.screen.switch_color_red()
-        self.client_set_temp = False
+        #self.client_set_temp = False
+    def set_remote_temp_flag(self,bFlag):
+	self.mutex.acquire()
+	self.client_temp_set = bFlag
+	self.mutex.release()
+
+    def get_remote_temp_flag(self):
+	self.mutex.acquire()
+	b = self.client_temp_set 
+	self.mutex.release()
+	return b
 
     def enter_temp_setting_mode_T(self):
         start_temp = self.sensors.temp
@@ -84,8 +95,9 @@ class Monitor_Controller:
         #print("must set:")
         #print(set_val)
         self.current_set = set_val
-        self.client_temp_set = True
-        #self.heater.start_pid_thread(self.current_set)
+        #self.client_temp_set = True
+        self.set_remote_temp_flag(True)
+	#self.heater.start_pid_thread(self.current_set)
         #self.screen.clear()
         #self.screen.switch_color_red()
         return True
@@ -95,6 +107,15 @@ class Monitor_Controller:
         ms = MonitorServer(self.sensors, self)
         ms.start_server_threaded([(self._main_loop, tuple(), {}, )])
 
+    def enter_surface_temp_mode(self):
+	pass
+    def stop_heating_mode(self):
+	if (self.heater.thread != None):
+            self.heater.stop_pid_thread()
+	    self.current_set = 0
+	    self.screen.switch_color_green()
+    def enter_network_mode(self):
+	pass
     def _main_loop(self):
         self.sensors.start()
         self.screen.play_intro()
@@ -114,9 +135,11 @@ class Monitor_Controller:
                 self.screen.set_msg("left")
                 time.sleep(0.5)
             if self.screen.lcd.select_button:
-                self.screen.set_msg("select")
-                time.sleep(0.5)
-            if self.client_temp_set:
+                #self.screen.set_msg("select")
+                #time.sleep(0.5)
+		self.stop_heating_mode()
+            if self.get_remote_temp_flag():
+		self.set_remote_temp_flag(False)
                 self.new_set_value(self.current_set)
             self.screen.update_readings(self.sensors.hb,self.sensors.temp, self.current_set)
    
